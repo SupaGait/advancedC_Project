@@ -115,18 +115,27 @@ status remFromList(List *list, void *pVoid) {
     if(!list->comp)
         return ERRUNABLE;
 
-    // Iterate through the list, and remove element if found using compare
-    Node *node = list->head;
-    while(node)
-    {
-        if( list->comp(pVoid, node->val) == 0 ) {
-            Node* tmpNode = node->next;
-            free(node);
-            node->next = tmpNode;
-            --list->nelts;
-            return OK;
+    // Compare with head, free if it is the node.
+    if( list->comp(pVoid, list->head->val) == 0 ) {
+        Node* tmpNode = list->head->next;
+        free(list->head);
+        list->head = tmpNode;
+        return OK;
+    }
+    else {
+        // Iterate through the list, and remove element if found using compare
+        Node *node = list->head;
+        while(node->next)
+        {
+            if( list->comp(pVoid, node->next->val) == 0 ) {
+                Node* tmpNode = node->next->next;
+                free(node->next);
+                node->next = tmpNode;
+                --list->nelts;
+                return OK;
+            }
+            node = node->next;
         }
-        node = node->next;
     }
     return ERRABSENT;
 }

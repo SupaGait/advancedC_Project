@@ -34,7 +34,7 @@ static int compString(void *s1, void *s2) {
  *************************************************************
  */
 static void prString(void *s) {
-    printf("%s", (char *) s);
+    printf("|%s|", (char *) s);
 }
 
 /*************************************************************
@@ -122,6 +122,15 @@ int main() {
     remFromListAt(l,0,(void**)&pEle);
     displayList(l);
     printf("\nRemoved element: %s should be equal to: %s", pEle, stringPos1);
+
+    // Test remove based on compare
+    remFromList(l,"belle marquise");    // Remove head
+    remFromList(l,"me font");           // Remove 2nd node
+
+    puts("\n--------------\n");
+    displayList(l);
+
+    printf("\nList size: %d\n",lengthList(l));
 
     /* final cleanup */
     delList(l);
