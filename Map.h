@@ -18,6 +18,7 @@ typedef struct _City{
     int latitude;
     int g;
     int h;
+    int f;
     List *neighbour;
     City* backpointer;
 }City;

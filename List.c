@@ -160,6 +160,7 @@ void forEach(List *list, void (*pFunction)(void *)) {
 
 int lengthList(List *list) {
     int length = 0;
+    // Iterate through the nodes
     for (Node* node = list->head; node; node = node->next) {
         length++;
     }
