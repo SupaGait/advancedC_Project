@@ -102,7 +102,7 @@ status getCity(char *cityName, List *pToCityList, City **city) {
         *city = pNewCity;
     }
     else if(pNode == (Node*)1) {
-        *city = (City*)pToCityList->head; // Element is in head
+        *city = (City*)pToCityList->head->val; // Element is in head
     }
     else {
         *city = (City*)pNode->next->val; // Found the element

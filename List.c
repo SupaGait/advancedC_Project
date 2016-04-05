@@ -15,9 +15,8 @@ List *newList(compFun fun, prFun fun1) {
 
 void delList(List *list) {
     // Remove the nodes from the list
-    Node *nodeTmp = list->head;
-    while (nodeTmp) {
-        nodeTmp = nodeTmp->next;
+    while (list->head) {
+        Node* nodeTmp = list->head->next;
         free(list->head);
         list->head = nodeTmp;
     }
@@ -40,44 +39,74 @@ status nthInList(List *list, int i, void **pVoid) {
 }
 
 status addListAt(List *list, int i, void *pVoid) {
-    // Iterate through the list, up to given element
-    Node *node = list->head;
-    for (int pos = 0; pos < i && node; ++pos) {
-        node = node->next;
+    // Create the new node, add value if succeeded.
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    if(!newNode) {
+        return ERRALLOC;
     }
-    if(node)
-    {
-        // Save next node, allocate and insert new element, set next node.
-        Node *tmpNode = node->next;
-        node = (Node*)malloc(sizeof(node));
-        if(!node) {
-            return ERRALLOC;
-        }
-        node->val = pVoid;
-        node->next = tmpNode;
-        ++list->nelts;
+    newNode->val = pVoid;
+
+    // First node?
+    if(i==0) {
+        Node *tmpNode = list->head;
+        list->head = newNode;
+        newNode->next = tmpNode;
     }
     else {
-        // Node not found
-        return ERRINDEX;
+        // Iterate through the list of nodes, up to given element
+        Node *node = list->head;
+        for (int pos = 0; pos < i-1 && node; ++pos) {
+            node = node->next;
+        }
+        if(node && node->next)
+        {
+            // Save next node, allocate and insert new element, set next node.
+            Node *tmpNode = node->next;
+            node->next = newNode;
+            newNode->next = tmpNode;
+        }
+        else {
+            // Node not found
+            return ERRINDEX;
+        }
     }
+    ++list->nelts;
     return OK;
 }
 
 status remFromListAt(List *list, int i, void **pVoid) {
-    Node *node = list->head;
-    for (int pos = 0; pos < i && node ; ++pos) {
-        node = node->next;
-    }
-    if(node) {
-        Node* tmpNode = node->next;
-        free(node);
-        node->next = tmpNode;
-        --list->nelts;
+    // Remove head if index is 0
+    if(i==0){
+        if(!list->head) {
+            return ERRINDEX;
+        }
+        // Return the element
+        *pVoid = list->head->val;
+        // Free node, and point to the next node
+        Node *tmpNode = list->head->next;
+        free(list->head);
+        list->head = tmpNode;
     }
     else {
-        return ERRINDEX;
+        // Otherwise iterate up to one place before the requested node position
+        Node *node = list->head;
+        for (int pos = 0; pos < i-1 && node ; ++pos) {
+            node = node->next;
+        }
+        // Remove the node if there is one.
+        if(node && node->next) {
+            // Return the element
+            *pVoid = node->next->val;
+            // Free node, and point to the next node
+            Node* tmpNode = node->next->next;
+            free(node->next);
+            node->next = tmpNode;
+        }
+        else {
+            return ERRINDEX;
+        }
     }
+    --list->nelts;
     return OK;
 }
 
@@ -148,6 +177,15 @@ status addList(List *list, void *pVoid) {
         list->head = newNode;
     }
     else {
+        // Compare head
+        if (list->comp(pVoid, list->head->val) <= 0) {
+            Node *tmpNode = list->head;
+            list->head = newNode;
+            newNode->next = tmpNode;
+            return OK;
+        }
+
+        // Compare rest of the list
         Node *node = list->head;
         while (node->next) {
             if (list->comp(pVoid, node->next->val) <= 0) {
@@ -174,7 +212,7 @@ Node *isInList(List *list, void *pVoid) {
 
     // element is at the head of the list
     if(list->comp(pVoid, node->val) == 0 ) {
-        return (Node*)1;            // Requirement say return 1... but this is not possible with this impl.
+        return (Node*)1;            // Requirement say return 1
     }
     // Iterate through the list and return matching node if found.
     while (node->next){
