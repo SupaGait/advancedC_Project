@@ -38,6 +38,8 @@ enum InputParams{
     InputStartAndGoal = 3
 };
 
+static const int MAX_ASTART_ITERATIONS = 10000;
+
 void createMap(char *path, List **cityList);
 void destroyMap(List *cityList);
 void findRoute(char *startCityName, char *goalCityName, List *cityList);

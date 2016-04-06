@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include "Map.h"
 #include "List.h"
 
@@ -31,6 +32,17 @@ static void displayCity(void *city) {
 }
 
 /*************************************************************
+ * Function to display the city name and G value
+ * @param city the City to display
+ *************************************************************
+ */
+static void displayCityAndGValue(void *city) {
+    City* theCity = (City*)city;
+    printf("%s: %d\n",theCity->cityName, theCity->g);
+}
+
+
+/*************************************************************
  * Function to compare two elements (Cities) : based on strcmp and cityname
  * @param s1 the first City to compare
  * @param s2 the second City to compare
@@ -45,7 +57,7 @@ static int compCitiesBasedOnName(void *s1, void *s2) {
 }
 
 /*************************************************************
- * Function to compare two elements cities based on
+ * Function to compare two elements cities based on the F value
  * @param s1 the first City to compare
  * @param s2 the second City to compare
  * @return <0 if s1 is less than s2
@@ -57,28 +69,40 @@ static int compCitiesBasedOnF (void * s1, void * s2) {
     City* city2 = (City*)s2;
     return (city1->f - city2->f);
 }
+/*************************************************************
+ * Function to compare two elements, always returns equal (0)
+ * @return 0
+ *************************************************************/
+static int noCompare (void * s1, void * s2) {
+    return 0;
+}
 
 /*************************************************************
- * Find a specific city
+ * Find a specific city in a list
  *  - Returns 0 if not found
   *************************************************************/
-City* findCity(char* name, List *pToCityList)
-{
-    // Dummy city for comparing
-    City dummyCity;
-    strncpy(dummyCity.cityName, name, MAX_CITYNAME_LENGTH);
-
-    // Find the element containing the city
-    Node *pNode = isInList(pToCityList, &dummyCity);
+City* findCityInList(List *list, City *city){
+    Node *pNode = isInList(list, city);
     if(!pNode) {
         return 0;
     }
     else if(pNode == (Node*)1) {
-        return (City*)pToCityList->head;  // Element is in head
+        return (City*)list->head->val;  // City is in head node value
     }
     else {
-        return (City*)pNode->next->val;  // Found the element
+        return (City*)pNode->next->val;  // City is in next node value
     }
+}
+/*************************************************************
+ * Find a specific city
+ *  - Returns 0 if not found
+  *************************************************************/
+City* findCityByName(char *name, List *pToCityList)
+{
+    // Dummy city for comparing
+    City dummyCity;
+    strncpy(dummyCity.cityName, name, MAX_CITYNAME_LENGTH);
+    return findCityInList(pToCityList, &dummyCity);
 }
 
 /*************************************************************
@@ -180,7 +204,7 @@ void createMap(char *path, List **cityList) {
                 if(ret == OK) {
                     city->latitude = mapParam1;
                     city->longitude = mapParam2;
-                    city->g = 10000;
+                    city->g = INT_MAX;
                     city->h = 0;
                     city->f = 0;
                     city->neighbour = 0;
@@ -227,15 +251,6 @@ void destroyMap(List *cityList){
     //TODO: Cleanup
 }
 
-
-/*************************************************************
- * Function to clear the g value of a City
- * @param city the City to display
- *************************************************************
- */
-//static void clearGvalue(void *city) {
-//    ((City*)city)->g=1000000;
-//}
 /*************************************************************
  * Function to calculate h of each city
  * @param city the City to display
@@ -247,98 +262,151 @@ int calculateHValue(City *cityFrom, City *cityTo ) {
 }
 
 void printStatus(List *openList, List *closedList, char* mssg){
+#if 0
     printf("-----> %s\nOPEN:\n", mssg);
     displayList(openList);
     printf("CLOSED:\n");
     displayList(closedList);
+#endif
+}
+void printBackPointerRoute(City* endCity) {
+    List *pRoute = newList(noCompare, noCompare, 0);
+    if(!pRoute) {
+        printf("Error creating back-pointer list\n");
+        exit(0-ERRALLOC);
+    }
+
+    // Iterate back over route, and save in list
+    City *city = endCity;
+    while(city){
+        addList(pRoute, (void*)city);
+        city = city->backpointer;
+    }
+
+    // Print the list
+    printf("Shortest route:\n");
+    forEach(pRoute, displayCityAndGValue);
+
+    // Cleanup
+    delList(pRoute);
 }
 
 void findRoute(char *startCityName, char *goalCityName, List *cityList) {
     status ret;
 
-    printf("\nFinding route from: %s to %s\n", startCityName, goalCityName);
+    printf("Finding shortest route\nFrom: %s\nTo: %s\n\n", startCityName, goalCityName);
 
     //TODO: check if cities are in the list
-    City *startCity = findCity(startCityName, cityList);
-    City *goalCity = findCity(goalCityName, cityList);
+    City *startCity = findCityByName(startCityName, cityList);
+    City *goalCity = findCityByName(goalCityName, cityList);
 
     // Create the algorithm helper lists OPEN and CLOSED
     List* openList = newList(compCitiesBasedOnName, compCitiesBasedOnF, displayCity);
     List* closedList = newList(compCitiesBasedOnName, compCitiesBasedOnF, displayCity);
 
+    if(!openList || !closedList) {
+        printf("Error allocating memory for OPEN or CLOSE list\n");
+        exit(0-ERRALLOC);
+    }
+
     /////////////////////////////////
     // 1 Place n0 in OPEN. compute ˆh(n0) and set ˆg(n0) = 0. All otherˆg = INF
     if((ret = addList(openList, startCity)) != OK) {
-        printf("%s\n",message(ret));
+        printf("%s\n", message(ret));
     }
     startCity->h = calculateHValue(startCity, goalCity);
     startCity->g = 0;
 
     /////////////////////////////////
     // 2 if OPEN is empty, stop (failure)
+    unsigned int iterationNr = 0;
+    while ((lengthList(openList) != 0) && (iterationNr < MAX_ASTART_ITERATIONS)) {
+
+        printStatus(openList, closedList, "After step 2");
+
+        /////////////////////////////////
+        // 3 remove from OPEN the vertex with minimal ˆf , call it n and add it to CLOSED
+        City *minimalFCity_N;
+        remFromListAt(openList, 0, (void**)&minimalFCity_N);
+        addList(closedList, minimalFCity_N);
+
+        printStatus(openList, closedList, "After step 3");
+
+        /////////////////////////////////
+        // 4 if n is the goal, stop (success): use pointer chain to retrieve the solution path.
+        if(compCitiesBasedOnName(minimalFCity_N, goalCity) == 0 ) {
+            printBackPointerRoute(minimalFCity_N);
+            break;
+        }
+
+        /////////////////////////////////
+        // 5 For each successor si of n:
+        int neighbourCount = lengthList(minimalFCity_N->neighbour);
+        for (int neighbourNr = 0; neighbourNr < neighbourCount; neighbourNr++) {
+
+            // Get the neighbor
+            Neighbour *neighbour = 0;
+            if((ret = nthInList(minimalFCity_N->neighbour, neighbourNr, (void**)&neighbour)) != OK) {
+                printf("%s\n", message(ret));
+                exit(0-ret);
+            }
+            City *neighbourCity = neighbour->city;
+
+            /////////////////////////////////
+            // 5.1 compute ˆg(n) + c(n, si )
+            int gValue = minimalFCity_N->g + neighbour->distance;
+
+            /////////////////////////////////
+            // 5.2 if si is in OPEN or in CLOSED and ˆg(n) + c(n, si ) > ˆg(si ), skip to next successor
+            City *pCityInOpen = findCityInList(openList, neighbourCity);
+            City *pCityInClosed = findCityInList(closedList, neighbourCity);
+            if((pCityInOpen && gValue > pCityInOpen->g ) ||
+               (pCityInClosed && gValue > pCityInClosed->g)){
+                continue;
+            }
+
+            /////////////////////////////////
+            // 5.3 remove si from OPEN and CLOSED if present
+            // Re-Insert puts the city in the correct (new) position.
+            if(pCityInOpen) {
+                if((ret = remFromList(openList, neighbourCity)) != OK) {
+                    printf("%s\n", message(ret));
+                    exit(0-ret);
+                }
+            }
+            if(pCityInClosed) {
+                if((ret = remFromList(closedList, neighbourCity)) != OK) {
+                    printf("%s\n", message(ret));
+                    exit(0-ret);
+                }
+            }
+
+            /////////////////////////////////
+            // 5.4 insert si in OPEN and update ˆg(si ) and back-path pointer
+            neighbourCity->g = gValue;
+            neighbourCity->h = calculateHValue(neighbourCity, goalCity);
+            neighbourCity->f = neighbourCity->g + neighbourCity->f;
+            neighbourCity->backpointer = minimalFCity_N;
+
+            if((ret = addList(openList, neighbourCity)) != OK) {
+                printf("%s\n", message(ret));
+                exit(0-ret);
+            }
+        }
+
+        printStatus(openList, closedList, "After step 5");
+
+        // 6 go to 2
+        iterationNr++;
+    }
     if(lengthList(openList) == 0) {
-        printf("Error in route algorithm aStart.\n");
-        exit(-1); //TODO: cleanup memory?
+        printf("Error in route algorithm, no nodes in OPEN list.\n");
+        exit(-100); //TODO: cleanup memory?
     }
-
-    printStatus(openList, closedList, "After step 2");
-
-    /////////////////////////////////
-    // 3 remove from OPEN the vertex with minimal ˆf , call it n and add it to CLOSED
-    City *minimalFCity_N;
-    remFromListAt(openList, 0, (void**)&minimalFCity_N);
-    addList(closedList, minimalFCity_N);
-
-    printStatus(openList, closedList, "After step 3");
-
-    /////////////////////////////////
-    // 4 if n is the goal, stop (success): use pointer chain to retrieve the solution path.
-    if(compCitiesBasedOnName(minimalFCity_N, goalCity) == 0 ) {
-        // TODO: Done, retreive backpointer
-        printf("ALL OK: END OF PROG\n");
+    else if(iterationNr >= MAX_ASTART_ITERATIONS) {
+        printf("Error in route algorithm, reached max iterations for finding path \n");
+        exit(-101);
     }
-
-    /////////////////////////////////
-    // 5 For each successor si of n:
-    int neighbourCount = lengthList(minimalFCity_N->neighbour);
-    for (int neighbourNr = 0; neighbourNr < neighbourCount; neighbourNr++) {
-
-        // Get the neighbor
-        Neighbour *neighbour = 0;
-        if((ret = nthInList(minimalFCity_N->neighbour, neighbourNr, (void**)&neighbour)) != OK) {
-            printf("%s\n",message(ret));
-        }
-
-        /////////////////////////////////
-        // 5.1 compute ˆg(n) + c(n, si )
-        int g = minimalFCity_N->g + neighbour->distance;
-        int h = calculateHValue(neighbour->city, goalCity);
-        int f = g + h;
-
-        /////////////////////////////////
-        // 5.2 if si is in OPEN or in CLOSED and ˆg(n) + c(n, si ) > ˆg(si ), skip to next successor
-        Node *pNodeInOpen = isInList(openList, neighbour->city);
-        Node *pNodeInClosed = isInList(closedList, neighbour->city);
-        if((pNodeInOpen && ((City*)pNodeInOpen->val)->f < f) || (pNodeInClosed && ((City*)pNodeInClosed->val)->f < f)){
-            continue;
-        }
-
-        /////////////////////////////////
-        // 5.3 remove si from OPEN and CLOSED if present
-        // TODO: Find a way to solve the compare issue... Name vs F Value
-        if(pNodeInOpen) {
-            remFromList(openList,neighbour->city);
-        }
-        if(pNodeInClosed) {
-            remFromList(closedList,neighbour->city);
-        }
-
-        /////////////////////////////////
-        // 5.4 insert si in OPEN and update ˆ g(si ) and backpath pointer
-        neighbour->city->g = g;
-        neighbour->city->backpointer = minimalFCity_N;
-    }
-    // 6 go to 2
 }
 
 // 1 Place n0 in OPEN. compute ˆh(n0) and set ˆg(n0) = 0. All otherˆg = 1
