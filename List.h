@@ -39,18 +39,20 @@ typedef void(*prFun)   (void*);
 typedef struct List {
     int nelts;
     Node * head;
-    compFun comp;
+    compFun getComp;
+    compFun addComp;
     prFun pr;
 } List;
 
 
 /** Empty List creation by dynamic memory allocation (O(1)).
- * @param comp comparison function between elements (ala strcmp())
+ * @param getComp comparison function between elements (ala strcmp())
+ * @param addCompFun comparison function between elements when adding (ala strcmp())
  * @param pr display function for list elements
  * @return a new (empty) list if memory allocation OK
  * @return 0 otherwise
  */
-List*	newList	(compFun,prFun);
+List*	newList	(compFun getCompfun, compFun addCompFun, prFun fun1);
 
 /** destroy the list by deallocating used memory (O(N)).
  * @param l the list to destroy */
@@ -64,6 +66,15 @@ void 	delList	(List*);
  * @return ERRINDEX if index out of list bounds
  */
 status 	nthInList	(List*,int,void**);
+
+/** add given element to given list according to compFun function (O(N)).
+ * @param l the list (supposedly sorted according to compFun function)
+ * @param e the element to add
+ * @return ERRALLOC if memory allocation failed
+ * @return ERRUNABLE if no comparison function has been provided
+ * @return OK otherwise
+ */
+status	addList	(List*,void*);
 
 /** Insert element at a given position in the list (O(N)).
  * @param l the list to store the element in
@@ -114,15 +125,6 @@ void	forEach		(List*,void(*)(void*));
  */
 int	lengthList	(List*);
 
-/** add given element to given list according to compFun function (O(N)).
- * @param l the list (supposedly sorted according to compFun function)
- * @param e the element to add
- * @return ERRALLOC if memory allocation failed
- * @return ERRUNABLE if no comparison function has been provided
- * @return OK otherwise
- */
-status	addList	(List*,void*);
-
 /** tests whether the list contains given element (O(N)).
  * @param l the list
  * @param e the searched element
@@ -131,5 +133,15 @@ status	addList	(List*,void*);
  * @return (a pointer to) the predecessor of the search element otherwise
  */
 Node*	isInList	(List*,void*);
+
+/** tests whether the list contains given element, using a custom compare (O(N)).
+ * @param list the list
+ * @param pVoid the searched element
+ * @param compareFun the function to compare elements
+ * @return 0 if element is not found in list
+ * @return 1 if element is at the head of the list (no predecessor)
+ * @return (a pointer to) the predecessor of the search element otherwise
+ */
+Node *isInListComp(List *list, void *pVoid, compFun compareFun);
 
 #endif

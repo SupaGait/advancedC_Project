@@ -1,11 +1,12 @@
 #include "List.h"
 
-List *newList(compFun fun, prFun fun1) {
+List *newList(compFun getCompfun, compFun addCompFun, prFun fun1) {
     // Allocate the memory, set the functions for printing and comparing
     List* newList = (List*)malloc(sizeof(List));
     if(newList)
     {
-        newList->comp = fun;
+        newList->getComp = getCompfun;
+        newList->addComp = addCompFun;
         newList->pr = fun1;
         newList->head = 0;
         newList->nelts = 0;
@@ -38,6 +39,51 @@ status nthInList(List *list, int i, void **pVoid) {
     }
 }
 
+status addList(List *list, void *pVoid) {
+    // Check for comparable function
+    if(!list->addComp) {
+        return ERRUNABLE;
+    }
+
+    // Create the new node
+    Node* newNode = (Node*)malloc( sizeof(Node) );
+    if(!newNode) {
+        return ERRALLOC;
+    }
+    newNode->val = pVoid;
+    newNode->next = 0;
+    ++list->nelts;
+
+    // Add in the list where applicable
+    if(!list->head) {
+        list->head = newNode;
+    }
+    else {
+        // Compare head
+        if (list->addComp(pVoid, list->head->val) <= 0) {
+            Node *tmpNode = list->head;
+            list->head = newNode;
+            newNode->next = tmpNode;
+            return OK;
+        }
+
+        // Compare rest of the list
+        Node *node = list->head;
+        while (node->next) {
+            if (list->addComp(pVoid, node->next->val) <= 0) {
+                // Add in between
+                Node *tmpNode = node->next;
+                node->next = newNode;
+                newNode->next = tmpNode;
+                return OK;
+            }
+            node = node->next;
+        }
+        //Append as last
+        node->next = newNode;
+    }
+    return OK;
+}
 status addListAt(List *list, int i, void *pVoid) {
     // Create the new node, add value if succeeded.
     Node* newNode = (Node*)malloc(sizeof(Node));
@@ -112,11 +158,11 @@ status remFromListAt(List *list, int i, void **pVoid) {
 
 status remFromList(List *list, void *pVoid) {
     // Test if comparable function is available
-    if(!list->comp)
+    if(!list->getComp)
         return ERRUNABLE;
 
     // Compare with head, free if it is the node.
-    if( list->comp(pVoid, list->head->val) == 0 ) {
+    if(list->getComp(pVoid, list->head->val) == 0 ) {
         Node* tmpNode = list->head->next;
         free(list->head);
         list->head = tmpNode;
@@ -127,7 +173,7 @@ status remFromList(List *list, void *pVoid) {
         Node *node = list->head;
         while(node->next)
         {
-            if( list->comp(pVoid, node->next->val) == 0 ) {
+            if(list->getComp(pVoid, node->next->val) == 0 ) {
                 Node* tmpNode = node->next->next;
                 free(node->next);
                 node->next = tmpNode;
@@ -167,51 +213,6 @@ int lengthList(List *list) {
     return length;
 }
 
-status addList(List *list, void *pVoid) {
-    // Check for comparable function
-    if(!list->comp) {
-        return ERRUNABLE;
-    }
-
-    // Create the new node
-    Node* newNode = (Node*)malloc( sizeof(Node) );
-    if(!newNode) {
-        return ERRALLOC;
-    }
-    newNode->val = pVoid;
-    newNode->next = 0;
-    ++list->nelts;
-
-    // Add in the list where applicable
-    if(!list->head) {
-        list->head = newNode;
-    }
-    else {
-        // Compare head
-        if (list->comp(pVoid, list->head->val) <= 0) {
-            Node *tmpNode = list->head;
-            list->head = newNode;
-            newNode->next = tmpNode;
-            return OK;
-        }
-
-        // Compare rest of the list
-        Node *node = list->head;
-        while (node->next) {
-            if (list->comp(pVoid, node->next->val) <= 0) {
-                // Add in between
-                Node *tmpNode = node->next;
-                node->next = newNode;
-                newNode->next = tmpNode;
-                return OK;
-            }
-            node = node->next;
-        }
-        //Append as last
-        node->next = newNode;
-    }
-    return OK;
-}
 
 Node *isInList(List *list, void *pVoid) {
     Node *node = list->head;
@@ -221,12 +222,34 @@ Node *isInList(List *list, void *pVoid) {
     }
 
     // element is at the head of the list
-    if(list->comp(pVoid, node->val) == 0 ) {
+    if(list->getComp(pVoid, node->val) == 0 ) {
         return (Node*)1;            // Requirement say return 1
     }
     // Iterate through the list and return matching node if found.
     while (node->next){
-        if(list->comp(node->next->val, pVoid) == 0) {
+        if(list->getComp(node->next->val, pVoid) == 0) {
+            return node;
+        }
+        node = node->next;
+    }
+
+    // Not found
+    return 0;
+}
+Node *isInListComp(List *list, void *pVoid, compFun compareFun) {
+    Node *node = list->head;
+    if(!node) {
+        // Not found
+        return 0;
+    }
+
+    // element is at the head of the list
+    if(compareFun(pVoid, node->val) == 0 ) {
+        return (Node*)1;            // Requirement say return 1
+    }
+    // Iterate through the list and return matching node if found.
+    while (node->next){
+        if(compareFun(node->next->val, pVoid) == 0) {
             return node;
         }
         node = node->next;

@@ -60,7 +60,7 @@ int main() {
             "d'amour"};
 
     /* list creation */
-    List *l = newList(compString, prString);
+    List *l = newList(compString,compString, prString);
     if (!l) return 1;
 
     /* populating list */
@@ -93,8 +93,16 @@ int main() {
     char *line = 0;
     nthInList(l,2, (void*)&line);
     if(!line || strcmp(line,tab[2]) != 0) {
-        printf("nthInList() does not work correctly, %s != %s", line, tab[2] );
+        printf("nthInList() does not work correctly, %s != %s\n", line, tab[2] );
     }
+    puts("-----------------\n");
+
+    // test inlist with custom compare
+    if(isInListComp(l, "me font", compString))
+        puts("me font is in list\n");
+    else
+        puts("me font is not in list\n");
+    puts("-----------------\n");
 
     // test addListAt, add 1nd(head) and 2nd(node).
     char *stringPos0 = "Added at head (pos 0)";
