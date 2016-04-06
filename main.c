@@ -1,23 +1,34 @@
 //
 // Created by Gerard on 1-4-2016.
 //
+// Application to find the optimal path between locations on a map
+// Using A* Algorithm to calculate the optimal route
+//  Heuristic function uses latitude and altitude information
+//
+// The program takes input parameters to specify locations.
+//
 
 #include <stdio.h>
 #include "Map.h"
 
+/** Path to the Map file */
+static char *const MapFilepath = "./FRANCE.MAP";
+
 /**
  * Compute the optimal point between two cities
- * Different input possibilities:
- *  -
- *  -
+ *   Requires input from the user passed when starting
+ *      - Start city
+ *      - (Optional) stop city, if not given will be asked.
  *
+ * @param argc amount of arguments given by user, should be 2 or 3
+ * #param args, 2nd and 3th string should contain start and optional end city Name
+ * @return 0 OK
+ * #return <0 ERROR CODE
  */
 int main(int argc, char** args) {
 
-    // Create a new cities list
-    List *pCityList = 0;
-    char startCity[] = "Rennes";    // Test TODO: Remove
-    char goalCity[] = "Lyon";       // Test TODO: Remove
+    char *startCityName = 0;
+    char *goalCityName = 0;
 
     // Debug:
     printf("---------------\n");
@@ -27,29 +38,35 @@ int main(int argc, char** args) {
     printf("---------------\n");
 
     // check input parameters, ask for other if necessary
-#if 0
-    if(argc == InputOnlyStart) {
-        // Our sort
+    if(argc == 2) {
+        goalCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
         printf("Where do you want to go?\n");
+        scanf("%s", goalCityName);
+        startCityName = args[Input_StartCity];
     }
-    else if(argc == InputStartAndGoal) {
-        printf("Currently hardcoded\n"); //TODO: implement
+    else if( argc == 3 ) {
+        startCityName = args[Input_StartCity];
+        goalCityName = args[Input_GoalCity];
     }
     else
     {
-        printf("Input commands: start [goal]");
+        printf("Input commands: startCityName [cityName]\n");
         return 0;
     }
-#endif
 
-    // Hardcode for now.
-    createMap("C:\\Users\\Gerard\\Google Drive\\Epita_\\Courses\\Advanced C\\Project\\FRANCE.MAP", &pCityList);
+    // Create the list of cities from the .MAP file
+    List *pCityList = createMap(MapFilepath);
 
     // print all the cities
     displayList(pCityList);
 
-    findRoute(startCity, goalCity, pCityList);
+    // Start finding Route
+    printf("Finding shortest route\nFrom: %s\nTo: %s\n\n", startCityName, goalCityName);
+    findRoute(startCityName, goalCityName, pCityList);
 
     // Clean up
     destroyMap(pCityList);
+    if(argc == Input_StartCity){
+        free(goalCityName);
+    }
 }
