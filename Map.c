@@ -65,8 +65,6 @@ static int compCitiesBasedOnF(void *s1, void *s2) {
 }
 /*************************************************************
  * Function to compare two elements, always returns equal (0)
- * Code optimization by compiler will remove usage.
- *
  * @param s1 Not used
  * @param s1 Not used
  * @return 0
@@ -194,7 +192,7 @@ status createMap(char *path, List **cityMapList) {
     file = fopen(path,"r");
     if(!file) {
         printf("Error while opening: %s\n", path);
-        return ERREXIST;
+        return ERROPEN;
     }
 
     // Read complete file and parse
@@ -219,7 +217,7 @@ status createMap(char *path, List **cityMapList) {
                 city->g = INT_MAX;
                 city->f = 0;
                 city->neighbour = 0;
-                city->backpointer = 0;
+                city->backPointer = 0;
                 curCity = city;
                 break;
             }
@@ -304,7 +302,7 @@ status printBackPointerRoute(City* endCity) {
             delList(pRoute);
             return ret;
         }
-        city = city->backpointer;
+        city = city->backPointer;
     }
 
     // Print the list
@@ -410,7 +408,7 @@ status findRoute(char *startCityName, char *goalCityName, List *cityList) {
             // --5.4-- insert si in OPEN and update ˆg(si ) and back-path pointer
             neighbourCity->g = gValue;
             neighbourCity->f = neighbourCity->g + calculateHValue(neighbourCity, goalCity);
-            neighbourCity->backpointer = minimalFCity_N;
+            neighbourCity->backPointer = minimalFCity_N;
 
             if((retStatus = addList(openList, neighbourCity)) != OK) {
                 break; // Return error after cleanup

@@ -16,7 +16,7 @@
 #include "status.h"
 
 /** default error message for unknown errors */
-static char* unknownError = "Unknown error";
+//static char* unknownError = "Unknown error";
 
 /** defined error messages */
 static char* msg[] = {

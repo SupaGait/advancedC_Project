@@ -61,7 +61,7 @@ int main(int argc, char** args) {
     List *pCityList = 0;
     status ret = createMap(MapFilepath, &pCityList);
     if(ret != OK) {
-        printf("While creating map from %s\nError: %s\n", MapFilepath, message(ret));
+        printf("While populating map from %s\nError: %s\n", MapFilepath, message(ret));
         return(0-ret);
     }
 
@@ -78,4 +78,6 @@ int main(int argc, char** args) {
     if(argc == OnlyStartName_ParamCount){
         free(goalCityName);
     }
+
+    return 0;
 }

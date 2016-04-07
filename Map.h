@@ -34,7 +34,7 @@ typedef struct _City{
     int g;
     int f;
     List *neighbour;
-    City* backpointer;
+    City* backPointer;
 }City;
 
 /**
