@@ -3,9 +3,8 @@
 //
 // Application to find the optimal path between locations on a map
 // Using A* Algorithm to calculate the optimal route
-//  Heuristic function uses latitude and altitude information
 //
-// The program takes input parameters to specify locations.
+// The program takes input parameters to specify names of the start and goal city
 //
 
 #include <stdio.h>
@@ -63,18 +62,15 @@ int main(int argc, char** args) {
     status ret = createMap(MapFilepath, &pCityList);
     if(ret != OK) {
         printf("While creating map from %s\nError: %s\n", MapFilepath, message(ret));
-        exit(0-ret);
+        return(0-ret);
     }
 
-    // print all the cities
-    ret = displayList(pCityList);
-
     // Start finding Route
-    printf("Finding shortest route\nFrom: %s\nTo: %s\n\n", startCityName, goalCityName);
+    printf("\nFinding shortest route\nFrom:\t%s\nTo:\t%s\n\n", startCityName, goalCityName);
     ret = findRoute(startCityName, goalCityName, pCityList);
     if(ret != OK) {
         printf("Error: %s.\n", message(ret));
-        exit(0-ret);
+        return(0-ret);
     }
 
     // Clean up

@@ -1,15 +1,21 @@
 //
 // Created by Gerard on 1-4-2016.
 //
+// Finding the optimal route between two cities using the A* algorithm.
+//  - Using an input file to create a City map with location and route details.
+//  - A* algorithm uses an heuristic function based on latitude and altitude position of cities
+//
+// Program created for Advanced C Course at EPITA
+//
 
 #ifndef ADVANCED_C_CLASS_CITY_H
 #define ADVANCED_C_CLASS_CITY_H
 
 #include "List.h"
 
-#define DEBUG_INFO              (1)
+//#define ENABLE_DEBUG_INFO
 #define MAX_CITYNAME_LENGTH     (64)
-static const int MAX_A_STAR_ITERATIONS = 10000;
+#define MAX_A_STAR_ITERATIONS   (10000)
 /**
  * Forward declaration of structures
  */
@@ -47,8 +53,38 @@ enum MapReadParams{
     CityAndLatAndLong = 3
 };
 
+/*************************************************************
+ * Populate a List with Cities with their position and neighbours.
+ * Input for the list is an file which contains all the information
+ *
+ * @param path Location of the input file
+ * @param cityMapList Pointer to list pointer which will be assigned to populated list
+ * @return OK if no error
+ * @return Error code when there was an error
+ **************************************************************/
 status createMap(char *path, List **cityMapList);
+
+/*************************************************************
+ * Find a Route between given cities based on the given city map
+ * The algorithm uses an A* implementation to calculate the best route
+ * An heuristic function based on latituda and altitude is used.
+ * Max iterations of A* algorithm can be set with: MAX_A_STAR_ITERATIONS
+ *
+ * @param startCityName Name of the city to start from.
+ * @param goalCityName Name of the city which is the goal.
+ * @param startCityName Map containing all cities and necessary location information.
+ * @return OK if no error
+ * @return Error code when there was an error
+ **************************************************************/
 status findRoute(char *startCityName, char *goalCityName, List *cityList);
+
+/*************************************************************
+ * Clean up of the created Map containing the City list
+ * !! Should always be called to prevent memory leaks !!
+ *   Even when there was an error during creating of the Map, which could be partially filled.
+ *
+ * @param cityList Name of the city to start from.
+ **************************************************************/
 void destroyMap(List *cityList);
 
 

@@ -7,42 +7,37 @@
 #include <limits.h>
 #include "Map.h"
 
-
 /*************************************************************
- * Function to display the neighbors
- * @param city the City to display
- *************************************************************
- */
-static void displayNeighbors(void *neighbor) {
-    Neighbour *theNeighbor = (Neighbour*) neighbor;
-    printf(" %s(%d)",theNeighbor->city->cityName, theNeighbor->distance);
+ * Function to display the neighbours name and distance
+ * @param neighbour The neighbour to display
+ **************************************************************/
+static void displayNeighbours(void *neighbour) {
+    Neighbour *theNeighbour = (Neighbour*)neighbour;
+    printf(" %s(%d)", theNeighbour->city->cityName, theNeighbour->distance);
 }
 
 /*************************************************************
- * Function to display a city of the list
- * @param city the City to display
- *************************************************************
- */
+ * Function to display a city
+ * @param city The city to display
+ **************************************************************/
 static void displayCity(void *city) {
     City* theCity = (City*)city;
-    printf("%s, long:%d, lat:%d\t\tneighbors:",theCity->cityName, theCity->longitude, theCity->latitude);
-    forEach(theCity->neighbour, displayNeighbors);
+    printf("%s, long:%d, lat:%d\t\tneighbours:", theCity->cityName, theCity->longitude, theCity->latitude);
+    forEach(theCity->neighbour, displayNeighbours);
     printf("\n");
 }
 
 /*************************************************************
- * Function to display the city name and G value
- * @param city the City to display
- *************************************************************
- */
-static void displayCityAndGValue(void *city) {
+ * Function to print a city with distance(G) value (distance from start city)
+ * @param city The city to display
+ **************************************************************/
+static void displayCityAndDistance(void *city) {
     City* theCity = (City*)city;
-    printf("%s: %d\n",theCity->cityName, theCity->g);
+    printf("%s (%d)\n", theCity->cityName, theCity->g);
 }
 
-
 /*************************************************************
- * Function to compare two elements (Cities) : based on strcmp and cityname
+ * Function to compare two Cities on Name: based on strcmp
  * @param s1 the first City to compare
  * @param s2 the second City to compare
  * @return <0 if s1 is less than s2
@@ -56,29 +51,36 @@ static int compCitiesBasedOnName(void *s1, void *s2) {
 }
 
 /*************************************************************
- * Function to compare two elements cities based on the F value
+ * Function to compare two Cities based on the F value
  * @param s1 the first City to compare
  * @param s2 the second City to compare
  * @return <0 if s1 is less than s2
  * @return 0 if s1 equals s2
  * @return >0 otherwise
  *************************************************************/
-static int compCitiesBasedOnF (void * s1, void * s2) {
+static int compCitiesBasedOnF(void *s1, void *s2) {
     City* city1 = (City*)s1;
     City* city2 = (City*)s2;
     return (city1->f - city2->f);
 }
 /*************************************************************
  * Function to compare two elements, always returns equal (0)
+ * Code optimization by compiler will remove usage.
+ *
+ * @param s1 Not used
+ * @param s1 Not used
  * @return 0
  *************************************************************/
-static int noCompare (void * s1, void * s2) {
+static int noCompare (void *s1, void *s2) {
     return 0;
 }
 
 /*************************************************************
  * Find a specific city in a list
- *  - Returns 0 if not found
+ * @param list The list to search in
+ * @param city The city to search for, using the list compare function
+ * @return 0 if city was not found
+ * @return The city when the city is in the list
   *************************************************************/
 City* findCityInList(List *list, City *city){
     Node *pNode = isInList(list, city);
@@ -93,8 +95,11 @@ City* findCityInList(List *list, City *city){
     }
 }
 /*************************************************************
- * Find a specific city
- *  - Returns 0 if not found
+ * Find a city by name
+ * @param name The name of the city to search for
+ * @param list The list to search in
+ * @return 0 if city was not found
+ * @return The city when the city is in the list
   *************************************************************/
 City* findCityByName(char *name, List *pToCityList)
 {
@@ -104,12 +109,15 @@ City* findCityByName(char *name, List *pToCityList)
     return findCityInList(pToCityList, &dummyCity);
 }
 
-/*************************************************************
- * Get a city based on name
- *  - If not available, create and add to list
- *  - Only name will be initialised when newly created
-  *************************************************************/
-status getCity(char *cityName, List *pToCityList, City **city) {
+ /*************************************************************
+ * Get a city based on name, if it does not exist, it creates the city.
+ * @param cityName The name of the city to search for
+ * @param pToCityList The list to search in
+ * @param city Pointer to city pointer which will be assigned to allocated city.
+ * @return error code if unable to get or create city
+ * @return OK if city was found or created and set in city
+ *************************************************************/
+status getOrCreateCity(char *cityName, List *pToCityList, City **city) {
     // Create a local dummy for searching
     City dummyCity;
     strncpy(dummyCity.cityName, cityName, MAX_CITYNAME_LENGTH);
@@ -128,7 +136,7 @@ status getCity(char *cityName, List *pToCityList, City **city) {
         // Add to cityList
         status ret;
         if((ret = addList(pToCityList, pNewCity )) != OK) {
-            // Unable to add, free it
+            // Unable to add, free it or it will be lost.
             free(pNewCity);
             *city = 0;
             return ret;
@@ -144,12 +152,17 @@ status getCity(char *cityName, List *pToCityList, City **city) {
     return OK;
 }
 /*************************************************************
- * Add a neighbor to the city
+ * Add a neighbor to the given city
+ * @param city The city to add the neighbour to
+ * @param neighbourCity The city to add as a neighbour to city
+ * @param distance The distance to the given neighbour
+ * @return error code if unable to add neighbour
+ * @return OK if neighbour was correctly added
   *************************************************************/
 status addNeighbour(City *city, City *neighbourCity, int distance) {
     // Create neighbor list if empty
     if(!city->neighbour) {
-        city->neighbour = newList(compCitiesBasedOnName,compCitiesBasedOnName, displayCity);
+        city->neighbour = newList(compCitiesBasedOnName, compCitiesBasedOnName, displayCity);
         if(!city->neighbour) {
             return ERRALLOC;
         }
@@ -168,9 +181,6 @@ status addNeighbour(City *city, City *neighbourCity, int distance) {
     }
     return ret;
 }
-/*************************************************************
- *  createMap based on input file
-  *************************************************************/
 status createMap(char *path, List **cityMapList) {
     FILE *file;
     char cityName[MAX_CITYNAME_LENGTH];
@@ -178,7 +188,7 @@ status createMap(char *path, List **cityMapList) {
     int mapParam2;
 
     // Create a new cities list
-    *cityMapList = newList(compCitiesBasedOnName,compCitiesBasedOnF, displayCity);
+    *cityMapList = newList(compCitiesBasedOnName, compCitiesBasedOnF, displayCity);
 
     // Open the file
     file = fopen(path,"r");
@@ -194,11 +204,13 @@ status createMap(char *path, List **cityMapList) {
         switch (paramsCount){
             case CityAndLatAndLong:
             {
-                //printf("%s %d %d\n",cityName, mapParam1, mapParam2);
+#ifdef ENABLE_DEBUG_INFO
+                printf("%s %d %d\n",cityName, mapParam1, mapParam2);
+#endif
                 // Create the new city
                 City *city = 0;
                 status ret;
-                if((ret = getCity(cityName, *cityMapList, &city)) != OK) {
+                if((ret = getOrCreateCity(cityName, *cityMapList, &city)) != OK) {
                     return ret;
                 }
                 // Initialise the city
@@ -213,11 +225,13 @@ status createMap(char *path, List **cityMapList) {
             }
             case CityAndLongitude:
             {
-                //printf("\t%s %d\n",cityName, mapParam1);
+#ifdef ENABLE_DEBUG_INFO
+                printf("\t%s %d\n",cityName, mapParam1);
+#endif
                 // Check if the city is already available, if not add.
                 City *city = 0;
                 status ret;
-                if((ret = getCity(cityName, *cityMapList, &city)) != OK) {
+                if((ret = getOrCreateCity(cityName, *cityMapList, &city)) != OK) {
                     return ret;
                 }
                 if((ret = addNeighbour(curCity, city, mapParam1)) != OK) {
@@ -229,13 +243,27 @@ status createMap(char *path, List **cityMapList) {
     }
     // Close the file
     fclose(file);
+
+#ifdef ENABLE_DEBUG_INFO
+    printf("Found cities: %d\n", lengthList(*cityMapList));
+    displayList(*cityMapList);
+#endif
     return OK;
 }
-/*************************************************************
- * Clean the memory
-  *************************************************************/
 void destroyMap(List *cityList){
-    //TODO: Cleanup
+    if(!cityList){
+        return;
+    }
+
+    // Free all allocated cities
+    while(cityList->head) {
+        Node *pNodeTmp = cityList->head->next;
+        free(cityList->head->val);
+        cityList->head = pNodeTmp;
+    }
+
+    // Free the list
+    delList(cityList);
 }
 
 /*************************************************************
@@ -246,34 +274,46 @@ void destroyMap(List *cityList){
 int calculateHValue(City *cityFrom, City *cityTo ) {
     return (abs(cityFrom->latitude - cityTo->latitude) + abs(cityFrom->longitude - cityTo->longitude))/4;
 }
-#ifdef DEBUG_INFO
+#ifdef ENABLE_DEBUG_INFO
 void printStatus(List *openList, List *closedList, char* mssg){
-    printf("-----> %s\nOPEN:\n", mssg);
+    printf("\n---> %s <---\nOPEN:\n", mssg);
     displayList(openList);
     printf("CLOSED:\n");
     displayList(closedList);
 }
 #endif
-void printBackPointerRoute(City* endCity) {
+
+/*************************************************************
+ * Print the route from origin city to the given goal city based on back-pointer
+ * @param city The goal city
+ * @return error code if unable to print route
+ * @return OK if route printed successfully
+  *************************************************************/
+status printBackPointerRoute(City* endCity) {
     List *pRoute = newList(noCompare, noCompare, 0);
     if(!pRoute) {
         printf("Error creating back-pointer list\n");
-        exit(0-ERRALLOC);
+        return(ERRALLOC);
     }
 
     // Iterate back over route, and save in list
     City *city = endCity;
+    status ret;
     while(city){
-        addList(pRoute, (void*)city);
+        if((ret = addList(pRoute, (void*)city)) != OK) {
+            delList(pRoute);
+            return ret;
+        }
         city = city->backpointer;
     }
 
     // Print the list
     printf("Shortest route:\n");
-    forEach(pRoute, displayCityAndGValue);
+    forEach(pRoute, displayCityAndDistance);
 
     // Cleanup
     delList(pRoute);
+    return OK;
 }
 
 status findRoute(char *startCityName, char *goalCityName, List *cityList) {
@@ -304,25 +344,32 @@ status findRoute(char *startCityName, char *goalCityName, List *cityList) {
 
     /////////////////////////////////
     // 1 Place n0 in OPEN. compute ˆh(n0) and set ˆg(n0) = 0. All otherˆg = INF
-    status ret;
-    if((ret = addList(openList, startCity)) != OK) {
-        return ret;
+    status retStatus;
+    if((retStatus = addList(openList, startCity)) != OK) {
+        return retStatus;
     }
     startCity->g = 0;
 
-    // --2-- if OPEN is empty, stop (failure)
     unsigned int iterationNr = 0;
-    while ((lengthList(openList) != 0) && (iterationNr < MAX_A_STAR_ITERATIONS)) {
+    while (iterationNr < MAX_A_STAR_ITERATIONS) {
+        // --2-- if OPEN is empty, stop (failure)
+        if(lengthList(openList) == 0) {
+            printf("Error in route algorithm, no nodes in OPEN list.\n");
+            retStatus = ERRALGORTIHM;
+            break;
+        }
 
         // --3-- remove from OPEN the vertex with minimal ˆf , call it n and add it to CLOSED
         City *minimalFCity_N;
         remFromListAt(openList, 0, (void**)&minimalFCity_N);
-        addList(closedList, minimalFCity_N);
+        if((retStatus = addList(closedList, minimalFCity_N)) != OK) {
+            break; // Return error after cleanup
+        }
 
         // --4-- if n is the goal, stop (success): use pointer chain to retrieve the solution path.
         if(compCitiesBasedOnName(minimalFCity_N, goalCity) == 0 ) {
             printBackPointerRoute(minimalFCity_N);
-            break;
+            break; // Success
         }
 
         // --5-- For each successor si of n:
@@ -331,8 +378,8 @@ status findRoute(char *startCityName, char *goalCityName, List *cityList) {
 
             // Get the neighbor
             Neighbour *neighbour = 0;
-            if((ret = nthInList(minimalFCity_N->neighbour, neighbourNr, (void**)&neighbour)) != OK) {
-                return ret;
+            if((retStatus = nthInList(minimalFCity_N->neighbour, neighbourNr, (void**)&neighbour)) != OK) {
+                break; // Return error after cleanup
             }
             City *neighbourCity = neighbour->city;
 
@@ -350,13 +397,13 @@ status findRoute(char *startCityName, char *goalCityName, List *cityList) {
             // --5.3-- remove si from OPEN and CLOSED if present
             // Re-Insert puts the city in the correct (new) position.
             if(pCityInOpen) {
-                if((ret = remFromList(openList, neighbourCity)) != OK) {
-                    return ret;
+                if((retStatus = remFromList(openList, neighbourCity)) != OK) {
+                    break; // Return error after cleanup
                 }
             }
             if(pCityInClosed) {
-                if((ret = remFromList(closedList, neighbourCity)) != OK) {
-                    return ret;
+                if((retStatus = remFromList(closedList, neighbourCity)) != OK) {
+                    break; // Return error after cleanup
                 }
             }
 
@@ -365,28 +412,33 @@ status findRoute(char *startCityName, char *goalCityName, List *cityList) {
             neighbourCity->f = neighbourCity->g + calculateHValue(neighbourCity, goalCity);
             neighbourCity->backpointer = minimalFCity_N;
 
-            if((ret = addList(openList, neighbourCity)) != OK) {
-                return ret;
+            if((retStatus = addList(openList, neighbourCity)) != OK) {
+                break; // Return error after cleanup
             }
         }
-        printStatus(openList, closedList, "After iteration.\n");
-
+#ifdef ENABLE_DEBUG_INFO
+        printStatus(openList, closedList, "After iteration");
+#endif
         // --6-- go to 2
         iterationNr++;
     }
-    if(lengthList(openList) == 0) {
-        printf("Error in route algorithm, no nodes in OPEN list.\n");
-        //TODO: cleanup memory?
-        return ERRALGORTIHM;
+
+#ifdef ENABLE_DEBUG_INFO
+    printf("\nDEBUG status:\n");
+    printf("A* iterations: %d\n", iterationNr);
+#endif
+
+    // Cleanup the used lists
+    delList(openList);
+    delList(closedList);
+
+    // Return the correct status
+    if(retStatus != OK){
+        return retStatus;
     }
     else if(iterationNr >= MAX_A_STAR_ITERATIONS) {
         printf("Error in route algorithm, reached max iterations for finding path \n");
         return ERRALGORTIHM;
     }
-
-#ifdef DEBUG_INFO
-    printf("\nDEBUG status:\n");
-    printf("Iterations: %d\n", iterationNr);
-#endif
     return OK;
 }
