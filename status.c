@@ -32,6 +32,7 @@ static char* msg[] = {
         "Value already exists",
         "index out of bounds",
         "unable to perform operation",
+        "error in A* algorithm"
 
         "unknown error"
 };

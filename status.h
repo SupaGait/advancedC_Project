@@ -30,6 +30,7 @@ typedef enum {
     ERREXIST,
     ERRINDEX,
     ERRUNABLE,
+    ERRALGORTIHM,
 
     ERRUNKNOWN,
 } status;

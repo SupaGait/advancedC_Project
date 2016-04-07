@@ -14,6 +14,17 @@
 /** Path to the Map file */
 static char *const MapFilepath = "./FRANCE.MAP";
 
+/** Program input parameter count */
+static const int OnlyStartName_ParamCount = 2;
+static const int StartAndGoalName_ParamCount = 3;
+
+/** Possible input parameters given to the program*/
+enum InputParams{
+    /*Input_ProgramName = 0,*/
+    InputParam_StartCity = 1,
+    InputParam_GoalCity = 2
+};
+
 /**
  * Compute the optimal point between two cities
  *   Requires input from the user passed when starting
@@ -30,43 +41,45 @@ int main(int argc, char** args) {
     char *startCityName = 0;
     char *goalCityName = 0;
 
-    // Debug:
-    printf("---------------\n");
-    for (int i = 0; i < argc; ++i) {
-        printf("%d: %s\n",i, args[i]);
-    }
-    printf("---------------\n");
-
-    // check input parameters, ask for other if necessary
-    if(argc == 2) {
+    // Check program input parameters
+    if(argc == OnlyStartName_ParamCount) {
+        // Goal city not specified as input param, ask for it.
         goalCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
-        printf("Where do you want to go?\n");
+        printf("Which city do you want to go?\n");
         scanf("%s", goalCityName);
-        startCityName = args[Input_StartCity];
+        startCityName = args[InputParam_StartCity];
     }
-    else if( argc == 3 ) {
-        startCityName = args[Input_StartCity];
-        goalCityName = args[Input_GoalCity];
+    else if(argc == StartAndGoalName_ParamCount) {
+        startCityName = args[InputParam_StartCity];
+        goalCityName = args[InputParam_GoalCity];
     }
-    else
-    {
-        printf("Input commands: startCityName [cityName]\n");
+    else {
+        printf("Incorrect input.\nInput commands: startCityName [goalCityName]\n");
         return 0;
     }
 
     // Create the list of cities from the .MAP file
-    List *pCityList = createMap(MapFilepath);
+    List *pCityList = 0;
+    status ret = createMap(MapFilepath, &pCityList);
+    if(ret != OK) {
+        printf("While creating map from %s\nError: %s\n", MapFilepath, message(ret));
+        exit(0-ret);
+    }
 
     // print all the cities
-    displayList(pCityList);
+    ret = displayList(pCityList);
 
     // Start finding Route
     printf("Finding shortest route\nFrom: %s\nTo: %s\n\n", startCityName, goalCityName);
-    findRoute(startCityName, goalCityName, pCityList);
+    ret = findRoute(startCityName, goalCityName, pCityList);
+    if(ret != OK) {
+        printf("Error: %s.\n", message(ret));
+        exit(0-ret);
+    }
 
     // Clean up
     destroyMap(pCityList);
-    if(argc == Input_StartCity){
+    if(argc == OnlyStartName_ParamCount){
         free(goalCityName);
     }
 }
