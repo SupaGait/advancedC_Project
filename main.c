@@ -1,34 +1,42 @@
-//
-// Created by Gerard on 1-4-2016.
-//
-// Application to find the optimal path between locations on a map
-// Using A* Algorithm to calculate the optimal route
-//
-// The program takes input parameters to specify names of the start and goal city
-//
+/**
+ * @file main.c
+ * @author Gerard Klomphaar
+ * @date 1-4-2016
+ *
+ * @brief Application to find the optimal path between locations on a map.
+ *
+ * Using A* Algorithm to calculate the optimal route
+ * The program takes input parameters to specify names of the start and goal city
+ */
 
 #include <stdio.h>
 #include "Map.h"
 
 /** Path to the Map file */
-static char *const MapFilepath = "./FRANCE.MAP";
+static char *const DefaultMapFilepath = "./FRANCE.MAP";
 
 /** Program input parameter count */
-static const int OnlyStartName_ParamCount = 2;
-static const int StartAndGoalName_ParamCount = 3;
+enum ArgsParamsCount {
+    ArgsParamCount_NoInput = 1,
+    ArgsParamCount_OnlyStartName = 2,
+    ArgsParamCount_StartAndGoalName = 3,
+    ArgsParamCount_ALL = 4,
+};
 
 /** Possible input parameters given to the program*/
-enum InputParams{
+enum ArgsInputParams {
     /*Input_ProgramName = 0,*/
-    InputParam_StartCity = 1,
-    InputParam_GoalCity = 2
+    ArgsInputParam_StartCity = 1,
+    ArgsInputParam_GoalCity = 2,
+    ArgsInputParam_MapPath = 3
 };
 
 /**
  * Compute the optimal point between two cities
  *   Requires input from the user passed when starting
- *      - Start city
- *      - (Optional) stop city, if not given will be asked.
+ *      - Start city, if not given will be asked.
+ *      - Stop city, if not given will be asked.
+ *      - Optional Path to .MAP file (Default="./FRANCE.MAP" )
  *
  * @param argc amount of arguments given by user, should be 2 or 3
  * #param args, 2nd and 3th string should contain start and optional end city Name
@@ -39,29 +47,51 @@ int main(int argc, char** args) {
 
     char *startCityName = 0;
     char *goalCityName = 0;
+    char *mapFilePath = DefaultMapFilepath;
 
     // Check program input parameters
-    if(argc == OnlyStartName_ParamCount) {
-        // Goal city not specified as input param, ask for it.
-        goalCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
-        printf("Which city do you want to go?\n");
-        scanf("%s", goalCityName);
-        startCityName = args[InputParam_StartCity];
-    }
-    else if(argc == StartAndGoalName_ParamCount) {
-        startCityName = args[InputParam_StartCity];
-        goalCityName = args[InputParam_GoalCity];
-    }
-    else {
-        printf("Incorrect input.\nInput commands: startCityName [goalCityName]\n");
-        return 0;
+    switch(argc){
+        case ArgsParamCount_NoInput: {
+            startCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
+            goalCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
+
+            // No parameters given
+            printf("What is the starting city?\n");
+            scanf("%s", startCityName);
+            printf("What is the goal city?\n");
+            scanf("%s", goalCityName);
+            break;
+        }
+        case ArgsParamCount_OnlyStartName: {
+            // Goal city not specified as input param, ask for it.
+            goalCityName = (char*)malloc(MAX_CITYNAME_LENGTH);
+            printf("Which city do you want to go?\n");
+            scanf("%s", goalCityName);
+            startCityName = args[ArgsInputParam_StartCity];
+            break;
+        }
+        case ArgsParamCount_StartAndGoalName: {
+            startCityName = args[ArgsInputParam_StartCity];
+            goalCityName = args[ArgsInputParam_GoalCity];
+            break;
+        }
+        case ArgsParamCount_ALL: {
+            startCityName = args[ArgsInputParam_StartCity];
+            goalCityName = args[ArgsInputParam_GoalCity];
+            mapFilePath = args[ArgsInputParam_MapPath];
+            break;
+        }
+        default: {
+            printf("Incorrect input.\nInput commands: startCityName [goalCityName] [filepathMap, Default=\'./FRANCE.MAP\']\n");
+            return 0;
+        }
     }
 
     // Create the list of cities from the .MAP file
     List *pCityList = 0;
-    status ret = createMap(MapFilepath, &pCityList);
+    status ret = createMap(mapFilePath, &pCityList);
     if(ret != OK) {
-        printf("While populating map from %s\nError: %s\n", MapFilepath, message(ret));
+        printf("While populating map from %s\nError: %s\n", mapFilePath, message(ret));
         return(0-ret);
     }
 
@@ -75,7 +105,11 @@ int main(int argc, char** args) {
 
     // Clean up
     destroyMap(pCityList);
-    if(argc == OnlyStartName_ParamCount){
+    if(argc == ArgsParamCount_NoInput) {
+        free(startCityName);
+        free(goalCityName);
+    }
+    else if(argc == ArgsParamCount_OnlyStartName){
         free(goalCityName);
     }
 

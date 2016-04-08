@@ -5,9 +5,10 @@
  *************************************************************
  */
 /**
- * Sample test program for generic Lists : application to strings.
+ * @file main.c
+ * @brief Sample test program for generic Lists : application to strings.
  *
- *************************************************************/
+ */
 
 //static char rcsId[] = "@(#) $Id: ListTest.c 1972 2014-11-12 10:23:55Z phil $";
 

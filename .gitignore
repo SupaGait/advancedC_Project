@@ -10,6 +10,7 @@
 *.gch
 *.pch
 
+/Doxygen/html
 # Libraries
 *.lib
 *.a

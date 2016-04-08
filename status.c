@@ -1,17 +1,12 @@
-/********************************************************************
-*
-* $Id: status.c 1989 2015-10-16 18:19:52Z phil $
-*
-********************************************************************/
 /**
- * Minimal system for error handling.
+ * @brief Minimal system for error handling.
  *
  * Each value of the "status" enum is associated with an error message.
  * Every function (but some of those returning pointers) should return a
  * status. In the case of non-void functions, the former return value has
  * to be placed in the parameter list (by address)
  *
- ********************************************************************/
+ */
 
 #include "status.h"
 

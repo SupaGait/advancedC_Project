@@ -1,18 +1,11 @@
-/********************************************************************
- *
- * $Id: List.h 1989 2015-10-16 18:19:52Z phil $
- *
- ********************************************************************
- */
 /**
- *
- * Creation of a generic (simply linked) List structure.
+ * @file List.h
+ * @brief Creation of a generic (simply linked) List structure.
  *
  * To create a list, one must provide two functions (one function to
  * compare / order elements, one function to display them). Unlike arrays,
  * indices begins with 1.
- *
- ********************************************************************/
+ */
 
 #ifndef __List_H
 #define __List_H
@@ -20,7 +13,10 @@
 #include <stdlib.h>
 #include "status.h"
 
-/** Typical simple link structure: a Node is a "value / next" pair */
+/** Typical simple link structure: a Node is a "value / next" pair
+ * @param val pointer to resource
+ * @param next pointer to next Node, 0 if none
+ */
 typedef struct Node {
     void		*val;
     struct Node	*next;

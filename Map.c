@@ -1,25 +1,29 @@
-//
-// Created by Gerard on 1-4-2016.
-//
+/**
+ * @file Map.c
+ * @author Gerard Klomphaar
+ * @date 1-4-2016
+ *
+ * @brief Functions for finding the optimal route between two cities using the A* algorithm.
+ */
 
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
 #include "Map.h"
 
-/*************************************************************
+/**
  * Function to display the neighbours name and distance
  * @param neighbour The neighbour to display
- **************************************************************/
+ */
 static void displayNeighbours(void *neighbour) {
     Neighbour *theNeighbour = (Neighbour*)neighbour;
     printf(" %s(%d)", theNeighbour->city->cityName, theNeighbour->distance);
 }
 
-/*************************************************************
+/**
  * Function to display a city
  * @param city The city to display
- **************************************************************/
+ */
 static void displayCity(void *city) {
     City* theCity = (City*)city;
     printf("%s, long:%d, lat:%d\t\tneighbours:", theCity->cityName, theCity->longitude, theCity->latitude);
@@ -27,59 +31,59 @@ static void displayCity(void *city) {
     printf("\n");
 }
 
-/*************************************************************
+/**
  * Function to print a city with distance(G) value (distance from start city)
  * @param city The city to display
- **************************************************************/
+ */
 static void displayCityAndDistance(void *city) {
     City* theCity = (City*)city;
     printf("%s (%d)\n", theCity->cityName, theCity->g);
 }
 
-/*************************************************************
+/**
  * Function to compare two Cities on Name: based on strcmp
  * @param s1 the first City to compare
  * @param s2 the second City to compare
  * @return <0 if s1 is less than s2
  * @return 0 if s1 equals s2
  * @return >0 otherwise
- *************************************************************/
+ */
 static int compCitiesBasedOnName(void *s1, void *s2) {
     City* city1 = (City*)s1;
     City* city2 = (City*)s2;
     return strcmp(city1->cityName, city2->cityName);
 }
 
-/*************************************************************
+/**
  * Function to compare two Cities based on the F value
  * @param s1 the first City to compare
  * @param s2 the second City to compare
  * @return <0 if s1 is less than s2
  * @return 0 if s1 equals s2
  * @return >0 otherwise
- *************************************************************/
+ */
 static int compCitiesBasedOnF(void *s1, void *s2) {
     City* city1 = (City*)s1;
     City* city2 = (City*)s2;
     return (city1->f - city2->f);
 }
-/*************************************************************
+/**
  * Function to compare two elements, always returns equal (0)
  * @param s1 Not used
  * @param s1 Not used
  * @return 0
- *************************************************************/
+ */
 static int noCompare (void *s1, void *s2) {
     return 0;
 }
 
-/*************************************************************
+/**
  * Find a specific city in a list
  * @param list The list to search in
  * @param city The city to search for, using the list compare function
  * @return 0 if city was not found
  * @return The city when the city is in the list
-  *************************************************************/
+  */
 City* findCityInList(List *list, City *city){
     Node *pNode = isInList(list, city);
     if(!pNode) {
@@ -92,13 +96,13 @@ City* findCityInList(List *list, City *city){
         return (City*)pNode->next->val;  // City is in next node value
     }
 }
-/*************************************************************
+/**
  * Find a city by name
  * @param name The name of the city to search for
  * @param list The list to search in
  * @return 0 if city was not found
  * @return The city when the city is in the list
-  *************************************************************/
+  */
 City* findCityByName(char *name, List *pToCityList)
 {
     // Dummy city for comparing
@@ -107,14 +111,14 @@ City* findCityByName(char *name, List *pToCityList)
     return findCityInList(pToCityList, &dummyCity);
 }
 
- /*************************************************************
+ /**
  * Get a city based on name, if it does not exist, it creates the city.
  * @param cityName The name of the city to search for
  * @param pToCityList The list to search in
  * @param city Pointer to city pointer which will be assigned to allocated city.
  * @return error code if unable to get or create city
  * @return OK if city was found or created and set in city
- *************************************************************/
+ */
 status getOrCreateCity(char *cityName, List *pToCityList, City **city) {
     // Create a local dummy for searching
     City dummyCity;
@@ -149,14 +153,14 @@ status getOrCreateCity(char *cityName, List *pToCityList, City **city) {
     }
     return OK;
 }
-/*************************************************************
+/**
  * Add a neighbor to the given city
  * @param city The city to add the neighbour to
  * @param neighbourCity The city to add as a neighbour to city
  * @param distance The distance to the given neighbour
  * @return error code if unable to add neighbour
  * @return OK if neighbour was correctly added
-  *************************************************************/
+  */
 status addNeighbour(City *city, City *neighbourCity, int distance) {
     // Create neighbor list if empty
     if(!city->neighbour) {
@@ -264,7 +268,7 @@ void destroyMap(List *cityList){
     delList(cityList);
 }
 
-/*************************************************************
+/**
  * Function to calculate h of each city
  * @param city the City to display
  *************************************************************
@@ -281,12 +285,12 @@ void printStatus(List *openList, List *closedList, char* mssg){
 }
 #endif
 
-/*************************************************************
+/**
  * Print the route from origin city to the given goal city based on back-pointer
  * @param city The goal city
  * @return error code if unable to print route
  * @return OK if route printed successfully
-  *************************************************************/
+  */
 status printBackPointerRoute(City* endCity) {
     List *pRoute = newList(noCompare, noCompare, 0);
     if(!pRoute) {

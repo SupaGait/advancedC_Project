@@ -1,5 +1,10 @@
-#include "List.h"
+/**
+ * @file List.c
+ * @brief Creation of a generic (simply linked) List structure.
+ *
+ */
 
+#include "List.h"
 List *newList(compFun getCompfun, compFun addCompFun, prFun fun1) {
     // Allocate the memory, set the functions for printing and comparing
     List* newList = (List*)malloc(sizeof(List));
@@ -61,9 +66,8 @@ status addList(List *list, void *pVoid) {
     else {
         // Compare head
         if (list->addComp(pVoid, list->head->val) <= 0) {
-            Node *tmpNode = list->head;
+            newNode->next = list->head;
             list->head = newNode;
-            newNode->next = tmpNode;
             return OK;
         }
 
@@ -72,9 +76,8 @@ status addList(List *list, void *pVoid) {
         while (node->next) {
             if (list->addComp(pVoid, node->next->val) <= 0) {
                 // Add in between
-                Node *tmpNode = node->next;
+                newNode->next = node->next;
                 node->next = newNode;
-                newNode->next = tmpNode;
                 return OK;
             }
             node = node->next;
@@ -94,9 +97,8 @@ status addListAt(List *list, int i, void *pVoid) {
 
     // First node?
     if(i==0) {
-        Node *tmpNode = list->head;
+        newNode->next = list->head;
         list->head = newNode;
-        newNode->next = tmpNode;
     }
     else {
         // Iterate through the list of nodes, up to given element
@@ -106,10 +108,9 @@ status addListAt(List *list, int i, void *pVoid) {
         }
         if(node && node->next)
         {
-            // Save next node, allocate and insert new element, set next node.
-            Node *tmpNode = node->next;
+            // Allocate and insert new element, set next node.
+            newNode->next = node->next;
             node->next = newNode;
-            newNode->next = tmpNode;
         }
         else {
             // Node not found

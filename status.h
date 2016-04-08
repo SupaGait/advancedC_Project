@@ -5,7 +5,8 @@
  ********************************************************************
  */
 /**
- * Minimal system for error handling.
+ * @file status.h
+ * @brief Minimal system for error handling.
  *
  * Each value of the "status" enum is associated with an error message.
  * Every function (but some of those returning pointers) should return a
@@ -35,7 +36,8 @@ typedef enum {
     ERRUNKNOWN,
 } status;
 
-/** get message associated with the given status value (O(1)).
+/**
+ * get message associated with the given status value (O(1)).
  * @param s the status value
  * @return the associated message
  */
