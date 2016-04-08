@@ -115,3 +115,32 @@ int main(int argc, char** args) {
 
     return 0;
 }
+
+// Main page for DoxyGen documentation
+/** \mainpage RouteFinding
+ *
+ * \section Description
+ *
+ * This project is created for the Advance C class at EPITA
+ *
+ * \section Building executable
+ * Simply use make to build the project
+ *   FindRoute application is generated
+ *
+ * \section Usage
+ *    FindRoute without parameters, default FRANCE.MAP will be used as input map.\n
+ *    Start city and destination city will be ask\n
+ *    \n
+ *    FindRoute With parameters; FindRoute startCityName [goalCityName] [filepathMap, Default='./FRANCE.MAP']\n
+ *    e.g.:\n
+ *        \li FindRoute "Lyon"\n
+ *        \li FindRoute "Lyon" "Rennes"\n
+ *        \li FindRoute "Lyon" "Rennes" "./FRANCE.MAP"\n
+ *
+ * \section Code
+ *      The code is divided over 4 sources:\n
+ *      \li main.c reads the user input and uses \ref Map.h to fill a List containing cities.\n
+ *      \li The Map.h createMap() returns a List containing City's and Neighbour's with a distance.\n
+ *      \li Possible errors are handled using a generic error value specified in status.h
+ *      \li List.h contains a genric List implementaion, used for City's and Neighbour's
+ */

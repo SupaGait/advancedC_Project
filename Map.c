@@ -107,7 +107,7 @@ City* findCityByName(char *name, List *pToCityList)
 {
     // Dummy city for comparing
     City dummyCity;
-    strncpy(dummyCity.cityName, name, MAX_CITYNAME_LENGTH);
+    dummyCity.cityName = name;
     return findCityInList(pToCityList, &dummyCity);
 }
 
@@ -120,18 +120,21 @@ City* findCityByName(char *name, List *pToCityList)
  * @return OK if city was found or created and set in city
  */
 status getOrCreateCity(char *cityName, List *pToCityList, City **city) {
-    // Create a local dummy for searching
-    City dummyCity;
-    strncpy(dummyCity.cityName, cityName, MAX_CITYNAME_LENGTH);
-
     // Search the list for the City node
-    Node *pNode = isInList(pToCityList, &dummyCity);
-    if(!pNode) {
-        // Create the new city, and initialize its name
+    City *foundCity = findCityByName(cityName, pToCityList);
+    if(!foundCity) {
+        // Create the new city
         City *pNewCity = (City*)malloc(sizeof(City));
         if(!pNewCity) {
             return ERRALLOC;
         }
+        // Create memory for name
+        pNewCity->cityName = (char*)malloc(MAX_CITYNAME_LENGTH);
+        if(!pNewCity->cityName) {
+            free(pNewCity);
+            return ERRALLOC;
+        }
+
         // Copy the name
         strncpy(pNewCity->cityName, cityName, MAX_CITYNAME_LENGTH);
 
@@ -145,11 +148,8 @@ status getOrCreateCity(char *cityName, List *pToCityList, City **city) {
         }
         *city = pNewCity;
     }
-    else if(pNode == (Node*)1) {
-        *city = (City*)pToCityList->head->val; // Element is in head
-    }
     else {
-        *city = (City*)pNode->next->val; // Found the element
+        *city = foundCity;
     }
     return OK;
 }
@@ -260,7 +260,8 @@ void destroyMap(List *cityList){
     // Free all allocated cities
     while(cityList->head) {
         Node *pNodeTmp = cityList->head->next;
-        free(cityList->head->val);
+        free( ((City*)cityList->head->val)->cityName);     // Free allocated memory for the name
+        free(cityList->head->val);                          // Free the City
         cityList->head = pNodeTmp;
     }
 

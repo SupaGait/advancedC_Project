@@ -1,4 +1,4 @@
-TARGET = FindRoute_GerardKlomphaar
+TARGET = FindRoute
 LIBS =
 CC = gcc
 CFLAGS = -g -std=c99

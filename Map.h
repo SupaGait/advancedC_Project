@@ -24,7 +24,7 @@
  * A list of neighbour cities for path finding, and a packpointer to trace back the path
  * */
 typedef struct City {
-    char cityName[MAX_CITYNAME_LENGTH];
+    char* cityName;
     int longitude;
     int latitude;
     int g;
