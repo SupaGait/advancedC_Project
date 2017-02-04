@@ -1,4 +1,7 @@
-https://travis-ci.org/SupaGait/advancedC_Project.svg?branch=master
+<a href="https://travis-ci.org/SupaGait/advancedC_Project">  
+  <img alt="travis"
+       src="https://travis-ci.org/SupaGait/advancedC_Project.svg?branch=master"/>
+</a>
 <a href="https://scan.coverity.com/projects/supagait-advancedc_project">
   <img alt="Coverity Scan Build Status"
        src="https://scan.coverity.com/projects/11650/badge.svg"/>
