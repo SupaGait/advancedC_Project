@@ -17,6 +17,5 @@ addons:
       name: "SupaGait/advancedC_Project"
       description: "Build submitted via Travis CI"
     notification_email: gklomphaar@hotmail.com
-    build_command_prepend: "./configure; make clean"
-    build_command:   "make -j 4"
+    build_command:   "make"
     branch_pattern: coverity_scan
